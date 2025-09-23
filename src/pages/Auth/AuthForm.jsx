@@ -8,6 +8,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import styles from "@/styles/css/AuthForm.module.css";
 import api from "@/utils/api";
 import { showAlert } from "@/components/AlertProvider";
@@ -19,6 +20,7 @@ const ENDPOINTS = {
 };
 
 const AuthForm = () => {
+	const navigate = useNavigate();
 	const [isLogin, setIsLogin] = useState(true);
 	const [correo, setCorreo] = useState("");
 	const [password, setPassword] = useState("");
@@ -93,13 +95,19 @@ const AuthForm = () => {
 						duration: 2500,
 					});
 
-					const meResponse = await api.get(ENDPOINTS.me);
-					const { user } = meResponse.data;
+					try {
+						const meResponse = await api.get(ENDPOINTS.me);
+						const { user } = meResponse.data;
 
-					if (user.rol_id === 2) {
+						if (user.rol_id === 2) {
+							window.location.href = "/";
+						} else if (user.rol_id) {
+							window.location.href = "/admin/dashboard";
+						}
+					} catch (meError) {
+						console.error("Error obteniendo datos del usuario:", meError);
+						// Si hay error al obtener datos del usuario, redirigir a la página principal
 						window.location.href = "/";
-					} else if (user.rol_id) {
-						window.location.href = "/admin/dashboard";
 					}
 				} else {
 					showAlert("Registro exitoso!",{
@@ -117,7 +125,6 @@ const AuthForm = () => {
 					duration: 2500,
 					title: "Error",
 					icon: "error",
-					didClose: () => { navigate(-1) },
 				});
 
 				setMessage(errorMessage);

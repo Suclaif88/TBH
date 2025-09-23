@@ -6,6 +6,7 @@ export const getCurrentUser = async () => {
     return res.data.user;            
   } catch (err) {
     if (err.response?.status === 401) {
+      console.log("Usuario no autenticado o token expirado");
       return null; 
     }
     console.error("Error al verificar usuario:", err);
