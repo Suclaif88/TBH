@@ -86,7 +86,12 @@ const AuthForm = () => {
 			: { Documento: documento, Correo: correo, Password: password };
 
 		try {
-			const response = await api.post(endpoint, payload);
+			const response = await api.post(endpoint, payload, {
+				withCredentials: true,
+				headers: {
+					'Content-Type': 'application/json',
+				}
+			});
 
 			if (response.status === 200 || response.status === 201) {
 				if (isLogin) {
@@ -96,7 +101,9 @@ const AuthForm = () => {
 					});
 
 					try {
-						const meResponse = await api.get(ENDPOINTS.me);
+						const meResponse = await api.get(ENDPOINTS.me, {
+							withCredentials: true,
+						});
 						const { user } = meResponse.data;
 
 						if (user.rol_id === 2) {
