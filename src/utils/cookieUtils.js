@@ -85,5 +85,15 @@ export const debugCookies = () => {
 	console.log("Current protocol:", window.location.protocol);
 	console.log("Is production:", window.location.hostname !== 'localhost');
 	console.log("Is Vercel:", window.location.hostname.includes('vercel.app'));
+	
+	// Verificar cookies específicas de autenticación
+	const authCookies = ['token', 'session', 'auth', 'jwt', 'access_token'];
+	authCookies.forEach(cookieName => {
+		const value = getCookie(cookieName);
+		if (value) {
+			console.log(`Cookie ${cookieName}:`, value);
+		}
+	});
+	
 	console.log("===================");
 };

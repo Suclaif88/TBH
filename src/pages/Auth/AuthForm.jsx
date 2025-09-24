@@ -119,15 +119,64 @@ const AuthForm = () => {
 						// Debug: verificar cookies antes de hacer la petición
 						console.log("Cookies antes de /me:", document.cookie);
 						
-						const meResponse = await api.get(ENDPOINTS.me, {
-							withCredentials: true,
-						});
-						const { user } = meResponse.data;
+						// Intentar múltiples endpoints si es necesario
+						let meResponse;
+						try {
+							meResponse = await api.get(ENDPOINTS.me, {
+								withCredentials: true,
+							});
+						} catch (firstError) {
+							console.log("Primer intento falló, intentando con /me (sin slash)");
+							meResponse = await api.get("/me", {
+								withCredentials: true,
+							});
+						}
+						
+						console.log("Respuesta completa de /me:", meResponse.data);
+						
+						// Intentar extraer el usuario de diferentes formas
+						let user = null;
+						if (meResponse.data && meResponse.data.user) {
+							user = meResponse.data.user;
+						} else if (meResponse.data && meResponse.data.id) {
+							user = meResponse.data;
+						} else {
+							console.error("No se pudo extraer usuario de la respuesta");
+						}
+
+						// Validar que el usuario existe
+						if (!user) {
+							console.error("Usuario es null en la respuesta");
+							
+							// Intentar usar información del login como respaldo
+							if (response.data && response.data.user) {
+								console.log("Usando información del login como respaldo");
+								user = response.data.user;
+							} else {
+								showAlert("Error: No se pudo obtener información del usuario", {
+									type: "error",
+									title: "Error de autenticación",
+								});
+								navigate("/");
+								return;
+							}
+						}
 
 						// Debug: verificar datos del usuario
 						console.log("Usuario obtenido:", user);
 						console.log("Rol del usuario:", user.rol_id);
 						console.log("Tipo de rol:", typeof user.rol_id);
+
+						// Validar que el rol existe
+						if (user.rol_id === null || user.rol_id === undefined) {
+							console.error("Rol del usuario es null o undefined");
+							showAlert("Error: El usuario no tiene un rol asignado", {
+								type: "error",
+								title: "Error de autorización",
+							});
+							navigate("/");
+							return;
+						}
 
 						// Guardar información del usuario en localStorage para persistencia
 						const userWithToken = {
@@ -147,12 +196,18 @@ const AuthForm = () => {
 							navigate("/admin/dashboard");
 						} else {
 							// Otros roles o sin rol definido
-							console.log("Rol no reconocido, redirigiendo a home");
+							console.log("Rol no reconocido:", user.rol_id, "redirigiendo a home");
 							navigate("/");
 						}
 					} catch (meError) {
 						console.error("Error obteniendo datos del usuario:", meError);
 						console.log("Cookies después del error:", document.cookie);
+						
+						// Mostrar error específico al usuario
+						showAlert("Error al verificar la sesión del usuario", {
+							type: "error",
+							title: "Error de autenticación",
+						});
 						
 						// Si hay error al obtener datos del usuario, redirigir a la página principal
 						navigate("/");
