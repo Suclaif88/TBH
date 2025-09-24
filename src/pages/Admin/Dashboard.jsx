@@ -44,7 +44,30 @@ import {
 	const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 	const [lastUpdate, setLastUpdate] = useState(new Date());
 	const [serviceErrors, setServiceErrors] = useState([]);
-  
+
+	const formatErrorMessage = (error) => {
+		const message = error.response?.data?.message || error.message;
+		
+		// Detectar errores de base de datos comunes
+		if (message.includes("Unknown column")) {
+			return "Error de base de datos: Columna no encontrada. Contacte al administrador.";
+		}
+		if (message.includes("Table") && message.includes("doesn't exist")) {
+			return "Error de base de datos: Tabla no encontrada. Contacte al administrador.";
+		}
+		if (message.includes("SQL syntax")) {
+			return "Error de base de datos: Sintaxis SQL incorrecta. Contacte al administrador.";
+		}
+		if (message.includes("Connection")) {
+			return "Error de conexión a la base de datos. Intente nuevamente.";
+		}
+		if (message.includes("500")) {
+			return "Error interno del servidor. Contacte al administrador.";
+		}
+		
+		return message;
+	};
+
 	const cargarDatos = async () => {
 	  try {
 		setLoading(true);
@@ -72,7 +95,8 @@ import {
 		  console.error("❌ Error cargando ventas:", ventasError);
 		  console.warn("⚠️ Continuando sin datos de ventas debido a error del servidor");
 		  ventas = []; // Continuar con array vacío en lugar de fallar completamente
-		  setServiceErrors(prev => [...prev, "Error al cargar ventas: " + (ventasError.response?.data?.message || ventasError.message)]);
+		  const errorMessage = formatErrorMessage(ventasError);
+		  setServiceErrors(prev => [...prev, `Error al cargar ventas: ${errorMessage}`]);
 		}
   
 		let compras = [];
@@ -92,7 +116,8 @@ import {
 		  console.error("❌ Error cargando compras:", comprasError);
 		  console.warn("⚠️ Continuando sin datos de compras debido a error del servidor");
 		  compras = []; // Continuar con array vacío en lugar de fallar completamente
-		  setServiceErrors(prev => [...prev, "Error al cargar compras: " + (comprasError.response?.data?.message || comprasError.message)]);
+		  const errorMessage = formatErrorMessage(comprasError);
+		  setServiceErrors(prev => [...prev, `Error al cargar compras: ${errorMessage}`]);
 		}
   
 		let productos = [];
@@ -112,7 +137,8 @@ import {
 		  console.error("❌ Error cargando productos:", productosError);
 		  console.warn("⚠️ Continuando sin datos de productos debido a error del servidor");
 		  productos = []; // Continuar con array vacío
-		  setServiceErrors(prev => [...prev, "Error al cargar productos: " + (productosError.response?.data?.message || productosError.message)]);
+		  const errorMessage = formatErrorMessage(productosError);
+		  setServiceErrors(prev => [...prev, `Error al cargar productos: ${errorMessage}`]);
 		}
   
 		console.log("✅ Ventas procesadas:", ventas.length);
@@ -484,6 +510,12 @@ import {
 			  </ServiceError>
 			))}
 			<small>El dashboard continúa funcionando con los datos disponibles.</small>
+			{serviceErrors.some(error => error.includes("base de datos")) && (
+			  <AdminContactInfo>
+				<strong>💡 Solución:</strong> Este error requiere atención del administrador del sistema. 
+				Por favor, contacte al equipo técnico para resolver el problema de base de datos.
+			  </AdminContactInfo>
+			)}
 		  </ServiceErrorsContainer>
 		)}
   
@@ -837,6 +869,21 @@ import {
 	
 	&:last-child {
 	  margin-bottom: 0;
+	}
+  `;
+
+  const AdminContactInfo = styled.div`
+	background: #d1ecf1;
+	border: 1px solid #bee5eb;
+	border-radius: 4px;
+	padding: 12px;
+	margin-top: 10px;
+	color: #0c5460;
+	font-size: 14px;
+	line-height: 1.4;
+	
+	strong {
+	  color: #0c5460;
 	}
   `;
   
