@@ -43,11 +43,13 @@ import {
 	const [error, setError] = useState(null);
 	const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 	const [lastUpdate, setLastUpdate] = useState(new Date());
+	const [serviceErrors, setServiceErrors] = useState([]);
   
 	const cargarDatos = async () => {
 	  try {
 		setLoading(true);
 		setError(null);
+		setServiceErrors([]);
 		
 		console.log("🔄 Cargando datos del dashboard...");
 		
@@ -68,7 +70,9 @@ import {
 		  }
 		} catch (ventasError) {
 		  console.error("❌ Error cargando ventas:", ventasError);
-		  throw new Error("No se pudieron cargar las ventas");
+		  console.warn("⚠️ Continuando sin datos de ventas debido a error del servidor");
+		  ventas = []; // Continuar con array vacío en lugar de fallar completamente
+		  setServiceErrors(prev => [...prev, "Error al cargar ventas: " + (ventasError.response?.data?.message || ventasError.message)]);
 		}
   
 		let compras = [];
@@ -86,7 +90,9 @@ import {
 		  }
 		} catch (comprasError) {
 		  console.error("❌ Error cargando compras:", comprasError);
-		  throw new Error("No se pudieron cargar las compras");
+		  console.warn("⚠️ Continuando sin datos de compras debido a error del servidor");
+		  compras = []; // Continuar con array vacío en lugar de fallar completamente
+		  setServiceErrors(prev => [...prev, "Error al cargar compras: " + (comprasError.response?.data?.message || comprasError.message)]);
 		}
   
 		let productos = [];
@@ -104,6 +110,9 @@ import {
 		  }
 		} catch (productosError) {
 		  console.error("❌ Error cargando productos:", productosError);
+		  console.warn("⚠️ Continuando sin datos de productos debido a error del servidor");
+		  productos = []; // Continuar con array vacío
+		  setServiceErrors(prev => [...prev, "Error al cargar productos: " + (productosError.response?.data?.message || productosError.message)]);
 		}
   
 		console.log("✅ Ventas procesadas:", ventas.length);
@@ -465,6 +474,18 @@ import {
 		  <InfoItem>Ventas válidas: {totalVentasCount}</InfoItem>
 		  <InfoItem>Compras válidas: {totalComprasCount}</InfoItem>
 		</DataInfo>
+
+		{serviceErrors.length > 0 && (
+		  <ServiceErrorsContainer>
+			<h4>⚠️ Advertencias del Sistema</h4>
+			{serviceErrors.map((error, index) => (
+			  <ServiceError key={index}>
+				{error}
+			  </ServiceError>
+			))}
+			<small>El dashboard continúa funcionando con los datos disponibles.</small>
+		  </ServiceErrorsContainer>
+		)}
   
 		<KPIContainer>
 		  <KPICard className="ventas">
@@ -781,6 +802,41 @@ import {
 	  &:hover {
 		background: #dc2626;
 	  }
+	}
+  `;
+
+  const ServiceErrorsContainer = styled.div`
+	background: #fff3cd;
+	border: 1px solid #ffeaa7;
+	border-radius: 8px;
+	padding: 15px;
+	margin-bottom: 20px;
+	
+	h4 {
+	  margin: 0 0 10px 0;
+	  color: #856404;
+	  font-size: 16px;
+	}
+	
+	small {
+	  display: block;
+	  margin-top: 10px;
+	  color: #856404;
+	  font-size: 12px;
+	}
+  `;
+
+  const ServiceError = styled.div`
+	background: #f8d7da;
+	border: 1px solid #f5c6cb;
+	border-radius: 4px;
+	padding: 8px 12px;
+	margin-bottom: 8px;
+	color: #721c24;
+	font-size: 14px;
+	
+	&:last-child {
+	  margin-bottom: 0;
 	}
   `;
   
