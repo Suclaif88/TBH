@@ -161,6 +161,28 @@ const AuthForm = () => {
 							if (response.data && response.data.user) {
 								console.log("Usando información del login como respaldo");
 								user = response.data.user;
+							} else if (serverToken) {
+								// Si tenemos token pero no usuario, decodificar el JWT para obtener la información
+								console.log("Decodificando JWT para obtener información del usuario");
+								try {
+									const payload = JSON.parse(atob(serverToken.split('.')[1]));
+									user = {
+										id: payload.id,
+										documento: payload.documento,
+										correo: payload.correo,
+										rol_id: payload.rol_id,
+										estado: payload.estado
+									};
+									console.log("Usuario decodificado del JWT:", user);
+								} catch (jwtError) {
+									console.error("Error decodificando JWT:", jwtError);
+									showAlert("Error: No se pudo obtener información del usuario", {
+										type: "error",
+										title: "Error de autenticación",
+									});
+									navigate("/");
+									return;
+								}
 							} else {
 								showAlert("Error: No se pudo obtener información del usuario", {
 									type: "error",
