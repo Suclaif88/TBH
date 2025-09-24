@@ -13,24 +13,22 @@ const api = axios.create({
 api.interceptors.request.use(
 	(config) => {
 		// Intentar obtener token de las cookies primero
-		const token = document.cookie
+		const cookieToken = document.cookie
 			.split('; ')
 			.find(row => row.startsWith('token='))
 			?.split('=')[1];
 		
-		// Si no hay token en cookies, intentar desde localStorage
-		if (!token) {
-			const user = localStorage.getItem('user');
-			if (user) {
-				try {
-					const userData = JSON.parse(user);
-					if (userData.token) {
-						config.headers.Authorization = `Bearer ${userData.token}`;
-					}
-				} catch (error) {
-					console.error("Error parsing user data:", error);
-				}
-			}
+		// Intentar obtener token del localStorage
+		const localToken = localStorage.getItem('authToken');
+		
+		// Usar el token disponible (preferir cookies, luego localStorage)
+		const token = cookieToken || localToken;
+		
+		if (token) {
+			config.headers.Authorization = `Bearer ${token}`;
+			console.log("Token agregado a la petición:", token.substring(0, 20) + "...");
+		} else {
+			console.log("No se encontró token para la petición");
 		}
 		
 		return config;

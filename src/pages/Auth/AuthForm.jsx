@@ -12,7 +12,7 @@ import { useNavigate } from "react-router-dom";
 import styles from "@/styles/css/AuthForm.module.css";
 import api from "@/utils/api";
 import { showAlert } from "@/components/AlertProvider";
-import { debugCookies } from "@/utils/cookieUtils";
+import { debugCookies, setCookie } from "@/utils/cookieUtils";
 
 const ENDPOINTS = {
 	login: "/auth/login",
@@ -108,8 +108,11 @@ const AuthForm = () => {
 					const serverToken = response.data?.token || response.data?.access_token;
 					if (serverToken) {
 						console.log("Token recibido del servidor:", serverToken);
-						// Guardar token en localStorage temporalmente
+						// Guardar token en localStorage
 						localStorage.setItem('authToken', serverToken);
+						
+						// También intentar establecer una cookie manualmente
+						setCookie('token', serverToken, 1); // 1 día de expiración
 					}
 
 					// Esperar un momento para que las cookies se establezcan
@@ -124,11 +127,17 @@ const AuthForm = () => {
 						try {
 							meResponse = await api.get(ENDPOINTS.me, {
 								withCredentials: true,
+								headers: {
+									'Authorization': `Bearer ${serverToken || localStorage.getItem('authToken')}`
+								}
 							});
 						} catch (firstError) {
 							console.log("Primer intento falló, intentando con /me (sin slash)");
 							meResponse = await api.get("/me", {
 								withCredentials: true,
+								headers: {
+									'Authorization': `Bearer ${serverToken || localStorage.getItem('authToken')}`
+								}
 							});
 						}
 						
