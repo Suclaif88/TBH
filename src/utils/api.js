@@ -9,6 +9,37 @@ const api = axios.create({
 	},
 });
 
+// Interceptor para agregar token de autorización si está disponible
+api.interceptors.request.use(
+	(config) => {
+		// Intentar obtener token de las cookies primero
+		const token = document.cookie
+			.split('; ')
+			.find(row => row.startsWith('token='))
+			?.split('=')[1];
+		
+		// Si no hay token en cookies, intentar desde localStorage
+		if (!token) {
+			const user = localStorage.getItem('user');
+			if (user) {
+				try {
+					const userData = JSON.parse(user);
+					if (userData.token) {
+						config.headers.Authorization = `Bearer ${userData.token}`;
+					}
+				} catch (error) {
+					console.error("Error parsing user data:", error);
+				}
+			}
+		}
+		
+		return config;
+	},
+	(error) => {
+		return Promise.reject(error);
+	}
+);
+
 // Interceptor para manejar errores de autenticación
 api.interceptors.response.use(
 	(response) => response,

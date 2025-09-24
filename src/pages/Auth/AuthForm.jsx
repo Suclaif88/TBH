@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import styles from "@/styles/css/AuthForm.module.css";
 import api from "@/utils/api";
 import { showAlert } from "@/components/AlertProvider";
+import { debugCookies } from "@/utils/cookieUtils";
 
 const ENDPOINTS = {
 	login: "/auth/login",
@@ -100,6 +101,17 @@ const AuthForm = () => {
 						duration: 2500,
 					});
 
+					// Debug: verificar cookies después del login
+					debugCookies();
+
+					// Verificar si el servidor envió un token en la respuesta
+					const serverToken = response.data?.token || response.data?.access_token;
+					if (serverToken) {
+						console.log("Token recibido del servidor:", serverToken);
+						// Guardar token en localStorage temporalmente
+						localStorage.setItem('authToken', serverToken);
+					}
+
 					// Esperar un momento para que las cookies se establezcan
 					await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -112,17 +124,30 @@ const AuthForm = () => {
 						});
 						const { user } = meResponse.data;
 
-						// Guardar información del usuario en localStorage para persistencia
-						localStorage.setItem('user', JSON.stringify(user));
+						// Debug: verificar datos del usuario
+						console.log("Usuario obtenido:", user);
+						console.log("Rol del usuario:", user.rol_id);
+						console.log("Tipo de rol:", typeof user.rol_id);
 
-						if (user.rol_id === 2) {
+						// Guardar información del usuario en localStorage para persistencia
+						const userWithToken = {
+							...user,
+							token: serverToken || localStorage.getItem('authToken')
+						};
+						localStorage.setItem('user', JSON.stringify(userWithToken));
+
+						// Redirección basada en el rol
+						if (user.rol_id === 2 || user.rol_id === "2") {
 							// Usuario cliente - redirigir a perfil
+							console.log("Redirigiendo a perfil de usuario");
 							navigate("/usuario/perfil");
-						} else if (user.rol_id === 1) {
+						} else if (user.rol_id === 1 || user.rol_id === "1") {
 							// Usuario admin - redirigir al dashboard
+							console.log("Redirigiendo a dashboard de admin");
 							navigate("/admin/dashboard");
 						} else {
 							// Otros roles o sin rol definido
+							console.log("Rol no reconocido, redirigiendo a home");
 							navigate("/");
 						}
 					} catch (meError) {

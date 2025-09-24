@@ -13,7 +13,7 @@ export const setCookie = (name, value, days = 7) => {
 	if (isProduction) {
 		cookieString += '; Secure';
 		if (isVercel) {
-			// Para Vercel, no especificar dominio para evitar problemas
+			// Para Vercel, usar SameSite=None para cross-site cookies
 			cookieString += '; SameSite=None';
 		} else {
 			cookieString += '; SameSite=Lax';
@@ -24,6 +24,12 @@ export const setCookie = (name, value, days = 7) => {
 	
 	console.log(`Setting cookie: ${cookieString}`);
 	document.cookie = cookieString;
+	
+	// Verificar si la cookie se estableció correctamente
+	setTimeout(() => {
+		const cookieValue = getCookie(name);
+		console.log(`Cookie ${name} after setting:`, cookieValue);
+	}, 100);
 };
 
 export const getCookie = (name) => {
@@ -70,4 +76,14 @@ export const clearAllCookies = () => {
 export const clearAuthData = () => {
 	clearAllCookies();
 	localStorage.removeItem('user');
+};
+
+export const debugCookies = () => {
+	console.log("=== DEBUG COOKIES ===");
+	console.log("All cookies:", document.cookie);
+	console.log("Current domain:", window.location.hostname);
+	console.log("Current protocol:", window.location.protocol);
+	console.log("Is production:", window.location.hostname !== 'localhost');
+	console.log("Is Vercel:", window.location.hostname.includes('vercel.app'));
+	console.log("===================");
 };

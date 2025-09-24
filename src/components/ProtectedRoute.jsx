@@ -39,12 +39,22 @@ function ProtectedRoute({ children, requiredRole }) {
 
 	if (loading) return <div>Cargando...</div>;
 
-	if (!user) return <Navigate to="/login" />;
-
-	if (requiredRole && user.rol_id !== requiredRole) {
+	if (!user) {
+		console.log("No hay usuario, redirigiendo a login");
 		return <Navigate to="/login" />;
 	}
 
+	console.log("Usuario en ProtectedRoute:", user);
+	console.log("Rol requerido:", requiredRole);
+	console.log("Rol del usuario:", user.rol_id);
+	console.log("¿Coinciden los roles?", user.rol_id == requiredRole);
+
+	if (requiredRole && user.rol_id != requiredRole) {
+		console.log("Rol no autorizado, redirigiendo a login");
+		return <Navigate to="/login" />;
+	}
+
+	console.log("Acceso autorizado");
 	return children;
 }
 

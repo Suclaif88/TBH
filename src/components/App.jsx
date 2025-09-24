@@ -53,7 +53,6 @@ import EditarNovedad from "../pages/Admin/Servicios/Horarios/EditarNovedad";
 import AuthForm from "../pages/Auth/AuthForm";
 import RecoverPassword from "../pages/Auth/RCP";
 import Home from "../pages/Landing/Home";
-import UsuarioIndex from "../pages/Landing/Home";
 import Perfil from "../pages/Landing/Perfil";
 import AgregarAgendamiento from "../pages/Admin/Servicios/Agendamiento/AgregarAgendamiento";
 import EditarAgendamiento from "../pages/Admin/Servicios/Agendamiento/EditarAgendamiento";
@@ -78,17 +77,14 @@ function App() {
 			<Route path="/activate/:token" element={<ActivateAccount />} />
 	
 			{/* Rutas privadas de usuario normal */}
-			
 			<Route 
-				path="/usuario"
+				path="/usuario/perfil"
 				element={
 					<ProtectedRoute requiredRole={2}>
 						<Perfil />
 					</ProtectedRoute>
 				}
-			>
-				<Route path="perfil" element={<Perfil />} />	
-			</Route>
+			/>
 			
 
 			{/* Rutas administrativas con Sidebar */}
