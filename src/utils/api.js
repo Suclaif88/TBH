@@ -1,5 +1,5 @@
 import axios from "axios";
-import { clearAllCookies } from "./cookieUtils";
+import { clearAuthData } from "./cookieUtils";
 
 const api = axios.create({
 	baseURL: import.meta.env.VITE_API_URL,
@@ -19,11 +19,11 @@ api.interceptors.response.use(
 			
 			// Solo redirigir si no estamos ya en la página de login
 			if (!window.location.pathname.includes('/auth') && !window.location.pathname.includes('/login')) {
-				// Limpiar todas las cookies
-				clearAllCookies();
+				// Limpiar todas las cookies y localStorage
+				clearAuthData();
 				
 				// Redirigir al login
-				window.location.href = '/auth';
+				window.location.href = '/login';
 			}
 		}
 		return Promise.reject(error);

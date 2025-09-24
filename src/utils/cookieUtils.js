@@ -6,11 +6,24 @@ export const setCookie = (name, value, days = 7) => {
 	
 	// Configuración para diferentes entornos
 	const isProduction = window.location.hostname !== 'localhost';
-	const domain = isProduction ? '.vercel.app' : 'localhost';
-	const secure = isProduction ? '; Secure' : '';
-	const sameSite = isProduction ? '; SameSite=None' : '; SameSite=Lax';
+	const isVercel = window.location.hostname.includes('vercel.app');
 	
-	document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;domain=${domain}${secure}${sameSite}`;
+	let cookieString = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+	
+	if (isProduction) {
+		cookieString += '; Secure';
+		if (isVercel) {
+			// Para Vercel, no especificar dominio para evitar problemas
+			cookieString += '; SameSite=None';
+		} else {
+			cookieString += '; SameSite=Lax';
+		}
+	} else {
+		cookieString += '; SameSite=Lax';
+	}
+	
+	console.log(`Setting cookie: ${cookieString}`);
+	document.cookie = cookieString;
 };
 
 export const getCookie = (name) => {
@@ -26,9 +39,22 @@ export const getCookie = (name) => {
 
 export const deleteCookie = (name) => {
 	const isProduction = window.location.hostname !== 'localhost';
-	const domain = isProduction ? '.vercel.app' : 'localhost';
+	const isVercel = window.location.hostname.includes('vercel.app');
 	
-	document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${domain}`;
+	let cookieString = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+	
+	if (isProduction) {
+		cookieString += '; Secure';
+		if (isVercel) {
+			cookieString += '; SameSite=None';
+		} else {
+			cookieString += '; SameSite=Lax';
+		}
+	} else {
+		cookieString += '; SameSite=Lax';
+	}
+	
+	document.cookie = cookieString;
 };
 
 export const clearAllCookies = () => {
@@ -39,4 +65,9 @@ export const clearAllCookies = () => {
 			deleteCookie(name);
 		}
 	});
+};
+
+export const clearAuthData = () => {
+	clearAllCookies();
+	localStorage.removeItem('user');
 };

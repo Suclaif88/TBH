@@ -100,21 +100,37 @@ const AuthForm = () => {
 						duration: 2500,
 					});
 
+					// Esperar un momento para que las cookies se establezcan
+					await new Promise(resolve => setTimeout(resolve, 1000));
+
 					try {
+						// Debug: verificar cookies antes de hacer la petición
+						console.log("Cookies antes de /me:", document.cookie);
+						
 						const meResponse = await api.get(ENDPOINTS.me, {
 							withCredentials: true,
 						});
 						const { user } = meResponse.data;
 
+						// Guardar información del usuario en localStorage para persistencia
+						localStorage.setItem('user', JSON.stringify(user));
+
 						if (user.rol_id === 2) {
-							window.location.href = "/";
-						} else if (user.rol_id) {
-							window.location.href = "/admin/dashboard";
+							// Usuario cliente - redirigir a perfil
+							navigate("/usuario/perfil");
+						} else if (user.rol_id === 1) {
+							// Usuario admin - redirigir al dashboard
+							navigate("/admin/dashboard");
+						} else {
+							// Otros roles o sin rol definido
+							navigate("/");
 						}
 					} catch (meError) {
 						console.error("Error obteniendo datos del usuario:", meError);
+						console.log("Cookies después del error:", document.cookie);
+						
 						// Si hay error al obtener datos del usuario, redirigir a la página principal
-						window.location.href = "/";
+						navigate("/");
 					}
 				} else {
 					showAlert("Registro exitoso!",{

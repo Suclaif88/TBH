@@ -8,8 +8,31 @@ function ProtectedRoute({ children, requiredRole }) {
 	const [user, setUser] = useState(null);
 
 	useEffect(() => {
+		// Primero intentar obtener usuario desde localStorage como respaldo
+		const localUser = localStorage.getItem('user');
+		if (localUser) {
+			try {
+				const parsedUser = JSON.parse(localUser);
+				setUser(parsedUser);
+				setLoading(false);
+				return;
+			} catch (error) {
+				console.error("Error parsing user from localStorage:", error);
+				localStorage.removeItem('user');
+			}
+		}
+
+		// Si no hay usuario en localStorage, intentar con la API
 		getUser().then((u) => {
+			if (u) {
+				// Guardar en localStorage para futuras referencias
+				localStorage.setItem('user', JSON.stringify(u));
+			}
 			setUser(u);
+			setLoading(false);
+		}).catch((error) => {
+			console.error("Error getting user from API:", error);
+			setUser(null);
 			setLoading(false);
 		});
 	}, []);
